@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app-deployment-autoscale # Название деплоймента
+  labels:
+    app: test2
+spec:
+  replicas: 4 # Количество подов по умолчанию в деплойменте. В случае низкой нагрузки(ночью), количество подов снизится до 1
+  selector:
+    matchLabels:
+      project: test2
+  template: # Описаниe подов
+    metadata:
+      labels:
+        project: test2
+    spec: # Описание контейнера внутри подов
+      containers:
+        - name: test2-web # Имя контейнера
+          image: webapp:latest # Образ веб приложения из docker registry
+         ports:
+            - containerPort: 80
+          resources: # Ограничение ресурсов контейнера
+            requests:
+              memory: "128M"
+              cpu: "0.1"
+            limits:
+              cpu: "1" # Ограничение ядер используемых контейнером
+          readinessProbe:
+            httpGet:
+             path: /health # Путь по умолчанию для проверки готовности контейнера
+             port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+             path: /health # Путь по умолчанию для проверки живости. Путь может быть переопределен разработчиком. Ожидается статус 200 ok.
+             port: 80 # Порт веб приложения
+            initialDelaySeconds: 10 # Задержка перед первой проверкой
+            periodSeconds: 15 # Задержка последующих проверок
+         
+---
+apiVersion: autoscaling/v2 # Описание масштабирования деплоймента
+kind: HorizontalPodAutoscaler
+metadata:
+  name: autoscaling # Имя HPA, см. kubectl get hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-app-deployment-autoscale # Название деплоймента, который будем масштабировать
+  minReplicas: 1 # Минимальное количество подов
+  maxReplicas: 4 # Максимально количество подов
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70 # Количество подов изменяется в зависимости от загрузки CPU
