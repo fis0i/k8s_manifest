@@ -1,8 +1,4 @@
-# Тестовое задание для ООО Mindbox
-Тестовое задание по созданию манифеста k8s на позицию стажера SRE.
-___
-
-Задание выполнялось в тестовом кластере minikube, настройка кластера выполнена по документации https://kubernetes.io/ru/docs/tasks/tools/install-kubectl/
+Настройка кластера выполнена по документации https://kubernetes.io/ru/docs/tasks/tools/install-kubectl/
 https://kubernetes.io/ru/docs/tasks/tools/install-minikube/
 ___
 
